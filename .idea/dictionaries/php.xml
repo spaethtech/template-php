@@ -7,6 +7,12 @@
             <w>getcwd</w>
             <w>getenv</w>
             <w>intval</w>
+            <w>libbz</w>
+            <w>libgmp</w>
+            <w>libicu</w>
+            <w>libpng</w>
+            <w>libpq</w>
+            <w>libzip</w>
             <w>ltrim</w>
             <w>mbstring</w>
             <w>ondrej</w>
@@ -27,6 +33,9 @@
             <w>strrpos</w>
             <w>strtoupper</w>
             <w>symfony</w>
+            <w>sysvmsg</w>
+            <w>sysvsem</w>
+            <w>sysvshm</w>
             <w>usleep</w>
             <w>xdebug</w>
         </words>

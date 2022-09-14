@@ -11,6 +11,7 @@
       <w>mkdir</w>
       <w>noninteractive</w>
       <w>nproc</w>
+      <w>pathconv</w>
       <w>readlink</w>
       <w>realpath</w>
       <w>runuser</w>

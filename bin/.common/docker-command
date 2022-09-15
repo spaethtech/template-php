@@ -1,0 +1,124 @@
+#!/usr/bin/env bash
+
+PROJECT_DIR=${PROJECT_DIR:-$(realpath "$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"/../..)}
+CURRENT_DIR=$(pwd)
+
+read -r -d "" ERROR_OUTSIDE_PROJECT <<-EOM
+$COMMAND_TAG is attempting to execute as a Dockerized Project Command (DPC)
+and can NOT be run outside the associated project's folder:
+$PROJECT_DIR
+EOM
+
+read -r -d "" ERROR_DOCKER_NOT_FOUND <<-EOM
+$COMMAND_TAG is attempting to execute as a Dockerized Project Command (DPC)
+however Docker could NOT be found on the host system
+EOM
+
+read -r -d "" ERROR_DOCKERFILE_NOT_FOUND <<-EOM
+$COMMAND_TAG is attempting to execute as a Dockerized Project Command (DPC)
+however a valid Dockerfile could NOT be found in the project at:
+$PROJECT_DIR/bin/.$COMMAND_TAG
+EOM
+
+if [[ ! "$CURRENT_DIR" =~ $PROJECT_DIR  ]]; then
+    echo "$ERROR_OUTSIDE_PROJECT"
+    exit 1
+fi
+
+PROJECT_REL=${CURRENT_DIR//"$PROJECT_DIR"/}
+PROJECT_REL=${PROJECT_REL#/}
+WORKING_DIR="$COMMAND_DIR"/"$PROJECT_REL"
+
+# NOTE: Currently, we prefer to NOT run any other existing/matching host command!
+#if [ -x "$(command -v "$COMMAND_TAG")" ] && [[ "$(which "$COMMAND_TAG")" != "$PROJECT_DIR/bin/$COMMAND_TAG" ]]; then
+#    "$COMMAND_TAG" "$@"
+#    exit
+#fi
+
+if [ -x "$(command -v docker)" ]
+then
+    if [[ "$(docker images -q spaethtech/"$COMMAND_TAG":"$COMMAND_VER" 2> /dev/null)" == "" ]]
+    then
+        if [ -f "$PROJECT_DIR"/bin/."$COMMAND_TAG"/Dockerfile ]
+        then
+            echo "Building $COMMAND_TAG image..."
+            DOCKER_SCAN_SUGGEST=false \
+            docker build \
+                --tag spaethtech/"$COMMAND_TAG":"$COMMAND_VER" \
+                --build-arg VERSION="$COMMAND_VER" \
+                "$PROJECT_DIR"/bin/."$COMMAND_TAG"
+        else
+            echo "$ERROR_DOCKERFILE_NOT_FOUND"
+            exit 1
+        fi
+    fi
+
+    ARGS=(
+        --interactive
+        --rm
+        --workdir "$WORKING_DIR"
+        --volume "$PROJECT_DIR":/opt/project
+        --volume "$HOME":/home/"$COMMAND_TAG"
+    )
+    ARGS+=("${COMMAND_RUN[@]}")
+
+    # Loop through supplied arguments and substitute paths!
+    USER_ARGS=()
+    for i in "$@"
+    do
+        FIXED=$i
+
+        # /c/dev/src/spaethtech/template-php/test.php
+        if [[ $FIXED =~ $PROJECT_DIR ]]
+        then
+            FIXED=${i//"$PROJECT_DIR"/"$COMMAND_DIR"}
+        fi
+
+        # C:\dev\src\spaethtech\template-php\test.php
+        if [[ $FIXED =~ [A-Za-z]: ]]
+        then
+            WIN_PATH=${FIXED//\\//}
+            WIN_PATH=$(echo "$WIN_PATH" | sed -e 's/\([A-Za-z]\):/\/\l\1/')
+
+            if [[ $WIN_PATH =~ $PROJECT_DIR ]]; then
+                FIXED=${WIN_PATH//"$PROJECT_DIR"/"$COMMAND_DIR"}
+            fi
+        fi
+
+        # .\test.php
+        if [[ $FIXED =~ \\ ]]
+        then
+            FIXED=${FIXED//\\//}
+        fi
+
+        # /c/Users/<user> => /home/$COMMAND_TAG
+        if [[ $FIXED =~ $HOME ]]
+        then
+            FIXED=${FIXED//$HOME//home/$COMMAND_TAG}
+        fi
+
+        # /c/Users/<user> => /home/<user>
+        if [[ $FIXED =~ /?[A-Za-z]:?[\\/]?[Uu]sers ]]
+        then
+            # TODO: Fixup User folders from Windows to Linux?
+            #FIXED=${FIXED//$HOME//home/$COMMAND_TAG}
+            echo "USER"
+        fi
+
+        USER_ARGS+=("$FIXED")
+    done
+
+    MSYS_NO_PATHCONV=1 \
+    docker run \
+        "${ARGS[@]}" \
+        spaethtech/"$COMMAND_TAG":"$COMMAND_VER" \
+        "${USER_ARGS[@]}"
+
+    exit
+else
+    echo "$ERROR_DOCKER_NOT_FOUND"
+    exit 1
+fi
+
+#echo "Could not find $COMMAND_TAG command!"
+#exit 1

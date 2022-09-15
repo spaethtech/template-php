@@ -2,7 +2,7 @@
 .idea/workspace.xml
 .idea/*.iml
 
-bin/.*/
+bin/**/*.exe
 
 vendor/
 

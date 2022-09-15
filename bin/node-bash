@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 INCLUDE_DIR=$(realpath "$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"/.common)
 
-COMMAND_RUN=(--tty)
-COMMAND_TAG=php
-COMMAND_VER=7.4
-COMMAND_DIR=/opt/project
+COMMAND_RUN=(--tty --entrypoint /bin/bash)
+COMMAND_TAG=node
+COMMAND_VER=16
+COMMAND_DIR=/usr/src/app
 
 # shellcheck source=./.common/docker-command
-. "$INCLUDE_DIR"/docker-command composer --ansi "$@"
+. "$INCLUDE_DIR"/docker-command -c "$@"

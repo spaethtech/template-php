@@ -4,6 +4,7 @@ INCLUDE_DIR=$(realpath "$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/n
 COMMAND_RUN=(--tty)
 COMMAND_TAG=php
 COMMAND_VER=7.4
+COMMAND_DIR=/opt/project
 
 # shellcheck source=./.common/docker-command
 . "$INCLUDE_DIR"/docker-command robo --ansi "$@"

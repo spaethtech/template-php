@@ -85,24 +85,28 @@ then
             fi
         fi
 
-        # .\test.php
-        if [[ $FIXED =~ \\ ]]
-        then
-            FIXED=${FIXED//\\//}
-        fi
-
-        # /c/Users/<user> => /home/$COMMAND_TAG
+        # $HOME => /home/$COMMAND_TAG
         if [[ $FIXED =~ $HOME ]]
         then
             FIXED=${FIXED//$HOME//home/$COMMAND_TAG}
         fi
 
         # /c/Users/<user> => /home/<user>
-        if [[ $FIXED =~ /?[A-Za-z]:?[\\/]?[Uu]sers ]]
+        if [[ $FIXED =~ [A-Za-z]:\\Users ]]
         then
             # TODO: Fixup User folders from Windows to Linux?
-            #FIXED=${FIXED//$HOME//home/$COMMAND_TAG}
-            echo "USER"
+            #USER=$(echo "$FIXED" | sed -e 's#/[A-Za-z]/Users/([^/\s]+).*$#TEST1#g')
+            USER=$(echo "$FIXED" | sed -e 's#[A-Za-z]:\\Users\\([^\\\s]+).*$#TEST2#g')
+            USER=${FIXED//[A-Za-z]:\\Users/TEST2}
+            #FIXED=${FIXED//\/[A-Za-z]\/Users\/([^\/]+)//home/\1}
+            echo "TEST"
+            echo "$USER"
+        fi
+
+        # .\test.php
+        if [[ $FIXED =~ \\ ]]
+        then
+            FIXED=${FIXED//\\//}
         fi
 
         USER_ARGS+=("$FIXED")

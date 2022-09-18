@@ -17,7 +17,7 @@ EOM
 read -r -d "" ERROR_DOCKERFILE_NOT_FOUND <<-EOM
 $COMMAND_TAG is attempting to execute as a Dockerized Project Command (DPC)
 however a valid Dockerfile could NOT be found in the project at:
-$PROJECT_DIR/bin/.$COMMAND_TAG
+$PROJECT_DIR/bin/.docker/$COMMAND_TAG
 EOM
 
 if [[ ! "$CURRENT_DIR" =~ $PROJECT_DIR  ]]; then
@@ -39,14 +39,20 @@ if [ -x "$(command -v docker)" ]
 then
     if [[ "$(docker images -q spaethtech/"$COMMAND_TAG":"$COMMAND_VER" 2> /dev/null)" == "" ]]
     then
-        if [ -f "$PROJECT_DIR"/bin/."$COMMAND_TAG"/Dockerfile ]
+        if [ -f "$PROJECT_DIR"/bin/.docker/"$COMMAND_TAG"/Dockerfile ]
         then
+            cd "$PROJECT_DIR"/bin/.docker || exit 1
+
             echo "Building $COMMAND_TAG image..."
             DOCKER_SCAN_SUGGEST=false \
             docker build \
                 --tag spaethtech/"$COMMAND_TAG":"$COMMAND_VER" \
                 --build-arg VERSION="$COMMAND_VER" \
-                "$PROJECT_DIR"/bin/."$COMMAND_TAG"
+                --file ./"$COMMAND_TAG"/Dockerfile \
+                .
+
+            # Return to previous (working) directory
+            cd - 1> /dev/null || exit 1
         else
             echo "$ERROR_DOCKERFILE_NOT_FOUND"
             exit 1
@@ -56,61 +62,43 @@ then
     ARGS=(
         --interactive
         --rm
+        --env WORKING_DIR="$WORKING_DIR"
         --workdir "$WORKING_DIR"
-        --volume "$PROJECT_DIR":/opt/project
+        --volume "$PROJECT_DIR":"$COMMAND_DIR"
         --volume "$HOME":/home/"$COMMAND_TAG"
     )
     ARGS+=("${COMMAND_RUN[@]}")
 
-    # Loop through supplied arguments and substitute paths!
+    # Loop through supplied arguments and run fix-ups...
+    COUNT=0
     USER_ARGS=()
     for i in "$@"
     do
-        FIXED=$i
+        # IF the current command is php AND the first argument is a file that exists, THEN prepend the -f option!
+#        if [[ "$COMMAND_TAG" == "php" ]] && [ $COUNT -eq 0 ] && [ -f "$i" ]
+#        then
+#            USER_ARGS+=("-f")
+#        fi
 
-        # /c/dev/src/spaethtech/template-php/test.php
-        if [[ $FIXED =~ $PROJECT_DIR ]]
-        then
-            FIXED=${i//"$PROJECT_DIR"/"$COMMAND_DIR"}
-        fi
-
-        # C:\dev\src\spaethtech\template-php\test.php
-        if [[ $FIXED =~ [A-Za-z]: ]]
-        then
-            WIN_PATH=${FIXED//\\//}
-            WIN_PATH=$(echo "$WIN_PATH" | sed -e 's/\([A-Za-z]\):/\/\l\1/')
-
-            if [[ $WIN_PATH =~ $PROJECT_DIR ]]; then
-                FIXED=${WIN_PATH//"$PROJECT_DIR"/"$COMMAND_DIR"}
-            fi
-        fi
-
-        # $HOME => /home/$COMMAND_TAG
-        if [[ $FIXED =~ $HOME ]]
-        then
-            FIXED=${FIXED//$HOME//home/$COMMAND_TAG}
-        fi
-
-        # /c/Users/<user> => /home/<user>
-        if [[ $FIXED =~ [A-Za-z]:\\Users ]]
-        then
-            # TODO: Fixup User folders from Windows to Linux?
-            #USER=$(echo "$FIXED" | sed -e 's#/[A-Za-z]/Users/([^/\s]+).*$#TEST1#g')
-            USER=$(echo "$FIXED" | sed -e 's#[A-Za-z]:\\Users\\([^\\\s]+).*$#TEST2#g')
-            USER=${FIXED//[A-Za-z]:\\Users/TEST2}
-            #FIXED=${FIXED//\/[A-Za-z]\/Users\/([^\/]+)//home/\1}
-            echo "TEST"
-            echo "$USER"
-        fi
-
-        # .\test.php
-        if [[ $FIXED =~ \\ ]]
-        then
-            FIXED=${FIXED//\\//}
-        fi
+        # Replacements:
+        # - \\ to /
+        # - C: to /c
+        # - $HOME to /home/$COMMAND_TAG
+        # - /c/Users to /home
+        # - /c/dev/src/spaethtech/template-php/test.php to /opt/project/test.php
+        FIXED=$(echo "$i" | sed \
+            -e "s#\\\\#/#" \
+            -e "s#\([A-Za-z]\):#/\l\1#" \
+            -e "s#$HOME#/home/$COMMAND_TAG#" \
+            -e "s#/[A-Za-z]/Users#/home#" \
+            -e "s#$PROJECT_DIR#$COMMAND_DIR#"
+        )
 
         USER_ARGS+=("$FIXED")
+        ((COUNT++))
     done
+
+    #echo "${USER_ARGS[@]}"
 
     MSYS_NO_PATHCONV=1 \
     docker run \

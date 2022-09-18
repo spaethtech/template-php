@@ -112,5 +112,7 @@ USER php
 # ENTRYPOINT & COMMAND
 # ----------------------------------------------------------------------------------------------------------------------
 
-ENTRYPOINT [ "/bin/bash" ]
-#CMD [ "-v" ]
+COPY docker-entrypoint /usr/local/bin/
+COPY php/docker-entrypoint /usr/local/bin/docker-node-entrypoint
+ENTRYPOINT [ "docker-php-entrypoint" ]
+CMD [ "php" ]

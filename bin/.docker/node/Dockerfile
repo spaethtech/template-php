@@ -1,5 +1,5 @@
 ARG VERSION
-FROM node:${VERSION}
+FROM node:${VERSION}-slim
 
 # Set the work directory
 WORKDIR /usr/src/app
@@ -18,7 +18,7 @@ WORKDIR /usr/src/app
 # COMPOSER
 # ----------------------------------------------------------------------------------------------------------------------
 
-ENV INSTALL_TMP=/tmp/composer
+#ENV INSTALL_TMP=/tmp/composer
 
 #RUN DEBIAN_FRONTEND=noninteractive apt-get -y install git unzip \
 # && mkdir -p "$INSTALL_TMP" \
@@ -28,12 +28,13 @@ ENV INSTALL_TMP=/tmp/composer
 # && unset INSTALL_TMP
 
 RUN npm install -g yo
+RUN npm install -g gulp
 
 # ----------------------------------------------------------------------------------------------------------------------
 # ROBO
 # ----------------------------------------------------------------------------------------------------------------------
 
-ENV INSTALL_DIR=/usr/local/bin/robo
+#ENV INSTALL_DIR=/usr/local/bin/robo
 
 #RUN DEBIAN_FRONTEND=noninteractive apt-get -y update \
 # && DEBIAN_FRONTEND=noninteractive apt-get -y install wget \
@@ -46,7 +47,7 @@ ENV INSTALL_DIR=/usr/local/bin/robo
 # CLEANUP
 # ----------------------------------------------------------------------------------------------------------------------
 
-RUN rm -rf /var/lib/apt/lists/*
+#RUN rm -rf /var/lib/apt/lists/*
 
 # ----------------------------------------------------------------------------------------------------------------------
 # ENVIRONMENT
@@ -67,5 +68,7 @@ USER node
 # ENTRYPOINT & COMMAND
 # ----------------------------------------------------------------------------------------------------------------------
 
-#ENTRYPOINT [ "node" ]
-#CMD [ "-v" ]
+COPY docker-entrypoint /usr/local/bin/
+COPY node/docker-entrypoint /usr/local/bin/docker-node-entrypoint
+ENTRYPOINT [ "docker-node-entrypoint" ]
+CMD [ "node" ]

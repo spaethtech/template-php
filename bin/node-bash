@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
-INCLUDE_DIR=$(realpath "$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"/.common)
+INCLUDE_DIR=$(realpath "$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"/.docker)
 
-COMMAND_RUN=(--tty --entrypoint /bin/bash)
+COMMAND_RUN=(--tty)
 COMMAND_TAG=node
 COMMAND_VER=16
 COMMAND_DIR=/usr/src/app
 
-# shellcheck source=./.common/docker-command
-. "$INCLUDE_DIR"/docker-command -c "$@"
+# shellcheck disable=SC2059
+QUOTED_ARGS="$(printf "${1+ %q}" "$@" | xargs)"
+
+# shellcheck source=./.docker/docker-command
+. "$INCLUDE_DIR"/docker-command bash -c "$QUOTED_ARGS"

@@ -1,13 +1,10 @@
 #!/usr/bin/env bash
-INCLUDE_DIR=$(realpath "$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"/.common)
+INCLUDE_DIR=$(realpath "$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"/.docker)
 
 COMMAND_RUN=()
 COMMAND_TAG=node
 COMMAND_VER=16
 COMMAND_DIR=/usr/src/app
-COMMAND_CMD=/usr/bin/npm
 
-echo "TEST\n"
-
-# shellcheck source=./.common/docker-command
+# shellcheck source=./.docker/docker-command
 . "$INCLUDE_DIR"/docker-command npm "$@"

@@ -7,4 +7,4 @@ COMMAND_VER=16
 COMMAND_DIR=/usr/src/app
 
 # shellcheck source=./.docker/docker-command
-. "$INCLUDE_DIR"/docker-command yo --ansi "$@"
+. "$INCLUDE_DIR"/docker-command yo "$@"

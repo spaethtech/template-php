@@ -9,29 +9,25 @@ WORKDIR /usr/src/app
 # ----------------------------------------------------------------------------------------------------------------------
 
 # Create a dedicated user
-#RUN useradd -ms /bin/bash -g root php
+RUN usermod -a -G root node
 
 # Change the permissions so tools like composer and robo can self-update
-#RUN chmod g+w /usr/local/bin
+RUN chmod g+w /usr/local/bin
 
 # ----------------------------------------------------------------------------------------------------------------------
-# COMPOSER
+# YEOMAN
 # ----------------------------------------------------------------------------------------------------------------------
 
-#ENV INSTALL_TMP=/tmp/composer
+ENV INSIGHT_DIR=/home/node/.config/configstore
 
-#RUN DEBIAN_FRONTEND=noninteractive apt-get -y install git unzip \
-# && mkdir -p "$INSTALL_TMP" \
-# && php -r "copy('https://getcomposer.org/installer', '$INSTALL_TMP/composer-setup.php');" \
-# && php "$INSTALL_TMP"/composer-setup.php --install-dir=/usr/local/bin --filename=composer \
-# && rm "$INSTALL_TMP"/composer-setup.php \
-# && unset INSTALL_TMP
-
-RUN npm install -g yo
-RUN npm install -g gulp
+RUN npm install -g yo\
+ && mkdir -p ${INSIGHT_DIR}\
+ && echo "{\n    optOut: true\n}" > ${INSIGHT_DIR}/insight-yo.yml\
+ && chown node:node "${INSIGHT_DIR}"/insight-yo.yml\
+ && unset INSIGHT_DIR
 
 # ----------------------------------------------------------------------------------------------------------------------
-# ROBO
+# GULP
 # ----------------------------------------------------------------------------------------------------------------------
 
 #ENV INSTALL_DIR=/usr/local/bin/robo
@@ -43,19 +39,22 @@ RUN npm install -g gulp
 # && chmod g+w "$INSTALL_DIR" \
 # && unset INSTALL_DIR
 
+RUN npm install -g gulp
+
 # ----------------------------------------------------------------------------------------------------------------------
 # CLEANUP
 # ----------------------------------------------------------------------------------------------------------------------
 
-#RUN rm -rf /var/lib/apt/lists/*
+RUN rm -rf /var/lib/apt/lists/*
 
 # ----------------------------------------------------------------------------------------------------------------------
 # ENVIRONMENT
 # ----------------------------------------------------------------------------------------------------------------------
 
 # Set environment variables
-#ENV PATH "/home/php/bin:$PATH"
+ENV PATH "/home/node/bin:$PATH"
 ENV PROJECT_DIR=/usr/src/app
+ENV VIRTUAL_ENV=guest
 
 # ----------------------------------------------------------------------------------------------------------------------
 # FINALIZATION

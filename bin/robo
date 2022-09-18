@@ -7,4 +7,4 @@ COMMAND_VER=7.4
 COMMAND_DIR=/opt/project
 
 # shellcheck source=./.docker/docker-command
-. "$INCLUDE_DIR"/docker-command robo --ansi "$@"
+. "$INCLUDE_DIR"/docker-command robo "$@"

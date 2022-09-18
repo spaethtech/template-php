@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 INCLUDE_DIR=$(realpath "$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"/.docker)
 
 COMMAND_RUN=(--tty)
@@ -9,5 +10,11 @@ COMMAND_DIR=/opt/project
 # shellcheck disable=SC2059
 QUOTED_ARGS="$(printf "${1+ %q}" "$@" | xargs)"
 
-# shellcheck source=./.docker/docker-command
-. "$INCLUDE_DIR"/docker-command bash -c "$QUOTED_ARGS"
+if [ -n "$QUOTED_ARGS" ]
+then
+    # shellcheck source=./.docker/docker-command
+    . "$INCLUDE_DIR"/docker-command bash -c "$QUOTED_ARGS"
+else
+    # shellcheck source=./.docker/docker-command
+    . "$INCLUDE_DIR"/docker-command bash
+fi

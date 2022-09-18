@@ -9,7 +9,7 @@ WORKDIR /opt/project
 # ----------------------------------------------------------------------------------------------------------------------
 
 # Create a dedicated user
-RUN useradd -ms /bin/bash -g root php
+RUN useradd -ms /bin/bash -G root php
 
 # Change the permissions so tools like composer and robo can self-update
 RUN chmod g+w /usr/local/bin
@@ -100,6 +100,7 @@ RUN rm -rf /var/lib/apt/lists/*
 # Set environment variables
 ENV PATH "/home/php/bin:$PATH"
 ENV PROJECT_DIR=/opt/project
+ENV VIRTUAL_ENV=guest
 
 # ----------------------------------------------------------------------------------------------------------------------
 # FINALIZATION

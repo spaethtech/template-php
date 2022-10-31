@@ -1,8 +1,6 @@
-.idea/modules.xml
-.idea/workspace.xml
-.idea/*.iml
 
 bin/**/*.exe
-
+tests/.cache/
 vendor/
 
+composer.lock

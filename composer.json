@@ -1,0 +1,26 @@
+{
+    "name": "spaethtech/template-php",
+    "description": "A starter template for all my PHP projects",
+    "type": "template",
+    "keywords": [ "template", "php" ],
+    "homepage": "https://github.com/spaethtech/template-php",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Ryan Spaeth",
+            "email": "rspaeth@spaethtech.com",
+            "role": "Developer"
+        }
+    ],
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "require-dev": {
+        "consolidation/robo": "^3.0",
+        "phpunit/phpunit": "^9.5"
+    },
+    "scripts": {
+        "post-create-project-cmd": [
+            "@composer install"
+        ]
+    }
+}
